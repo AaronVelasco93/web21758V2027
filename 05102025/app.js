@@ -1,3 +1,4 @@
+
 let usuarios=[];
 
 const form = document.getElementById('formUsuario');
@@ -75,5 +76,21 @@ inputArchivo.addEventListener('change', (e) => {
         }
     };
     lector.readAsText(archivo);
+
+});
+
+// decargar JSON
+btnDescargar.addEventListener('click',function(){
+    const blob = new Blob ([JSON.stringify(usuarios,null,2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+
+    // crear un elemento de html
+    const a = document.createElement('a');
+        a.href=url;
+        a.download=('usuarios_actualizados.json');
+        a.click();
+
+        // liberar la URL
+        URL.revokeObjectURL(url);
 
 });
