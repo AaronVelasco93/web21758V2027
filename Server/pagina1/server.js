@@ -1,6 +1,6 @@
 const express = require('express');
 // crear una instancia de express
-const aapp = express();
+const app = express();
 // definicion de puerto
 const port = 3009;
 
