@@ -27,7 +27,7 @@ async function cargarUsuarios() {
         table.appendChild(row);
     });
 }
-
+//funcion para llenar formulario
 function llenarFormulario(id, nombreValor, correoValor){
     nombre.value = nombreValor;
     correo.value = correoValor;
@@ -54,6 +54,7 @@ form.addEventListener('submit', async e =>{
         usuarioId = null;
         document.querySelector('button[type="submit"]').textContent='Agregar';
     }else{
+        //agregar
         await fetch('/api/usuarios',{
             method: 'POST',
             headers: {'Content-Type':'application/json'},
