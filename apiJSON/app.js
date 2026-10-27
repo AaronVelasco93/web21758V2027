@@ -45,7 +45,7 @@ app.put('/api/usuarios/:id', (req, res) => {
 });
 
 // Ruta DELETE: Eliminar usuario por ID
-app.delete('api/usuarios/:id', (req, res) => {
+app.delete('api/usuarios//:id', (req, res) => {
   let data = JSON.parse(fs.readFileSync(DATA_FILE));    // Lee el contenido del JSON
   const id = parseInt(req.params.id);                   // Extrae el ID desde la URL
   data = data.filter(u => u.id !== id);                 // Filtra todos menos el que se elimina
@@ -54,7 +54,7 @@ app.delete('api/usuarios/:id', (req, res) => {
 });
 
 // Iniciar el servidor en el puerto 3000
-const PORT = 3000;
+const PORT = 3005;
 app.listen(PORT, () => {
   console.log('Servidor corriendo en http://localhost:' + PORT);
 });
