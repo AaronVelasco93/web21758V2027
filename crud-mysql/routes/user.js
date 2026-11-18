@@ -1,123 +1,129 @@
-const express = require('express');
-const router = express.Router();
-const db = require("../db");
+const express = require('express'); // Import the Express library to create a router for handling user-related routes
+const router = express.Router();// create a new router instance to define routes for user operations
+const db = require('../db'); // Import the database module to interact with the database for user-related operations
 
-//mostrar todos los usuarios.
-router.get('/',(req,res)=>{
-    let consulta = 'SELECT id, nombre, correo FROM users';
-    db.query(consulta, (err,results)=>{
-        if(err) return res.send('Error en la consulta');
-        res.render('index',{
-            users: results
-        });
+// mostrar todo los usuarios en raiz
+router.get('/', (req, res) => {
+    const sql = 'SELECT * FROM users'; // Define the SQL query to select all users from the database    
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Error al obtener los usuarios');
+        } else {
+            res.render('index', { users: results });
+        }
     });
 });
+// agrergar nuevo usuario
+router.post('/add', (req, res) => {
+    const { nombre, correo } = req.body;
 
-//agregar nuevo usuario
-router.post('/add',(req,res)=>{
-    const {nombre , correo} = req.body;
+    // Cambio: validar el correo antes de insertar para avisar al usuario si ya existe.
+    const validateQuery = 'SELECT id FROM users WHERE correo = ? LIMIT 1';
+    const insertQuery = 'INSERT INTO users (nombre, correo) VALUES (?, ?)';
 
-    const validateQuery='SELECT id FROM users WHERE correo = ? LIMIT 1';
-    const insertQuery = 'INSERT INTO users (nombre, correo) VALUES (?,?)';
-    
-    db.query(validateQuery,[correo],(err,results)=>{
-        //error de consulta
-        if(err){
+    db.query(validateQuery, [correo], (err, results) => {
+        if (err) {
             console.log(err);
             return res.status(500).json({
                 error: 'Error al validar el correo'
             });
         }
-        //Si ya existe un registro con ese correo
-        if(results.length > 0){
+
+        if (results.length > 0) {
             return res.status(400).json({
-                error: 'El correo ya esta registrado. Captura otro correo'
+                error: 'El correo ya esta registrado. Capture otro correo.'
             });
         }
-        //Si el correo No existe, entonces procede a insertar el usuario
-       
-    });
-    db.query(insertQuery,[nombre, correo],(err,results)=>{
-        //si ocurre un error durante la insercion
-        if(err){
-            console.log(err);
-            //detectamos si el error es por duplicidad en la base de datos
-            if(err.code === 'ER_DUP_ENTRY'){
-                return res.status(400).json({
-                    error: 'El correo ya esta registrado'
+
+        db.query(insertQuery, [nombre, correo], (err, result) => {
+            if (err) {
+                console.log(err);
+
+                // Detectar error de correo duplicado si la base lo rechaza.
+                if (err.code === 'ER_DUP_ENTRY') {
+                    return res.status(400).json({
+                        error: 'El correo ya esta registrado. Capture otro correo.'
+                    });
+                }
+
+                return res.status(500).json({
+                    error: 'Error al agregar el usuario'
                 });
             }
-            //otro tipo de error general
-            return res.status(500).json({
-                error: 'Error al agregar usuario'
-            });
-        }
-        //Si todo sale bien
-        res.json({
-            mensaje: 'Usuario agreado correctamente'
-        });
-     });
-});
-//Mostrar en formulario para editar un usuario 
 
-
-router.get('/edit/:id',(req,res)=>{
-    let consulta = 'SELECT * FROM users WHERE id= ?';
-    db.query(consulta,[req.params.id],(err,results)=>{
-        if(err) return res.send('Error al buscar usuario');
-        res.render('edit',{
-            users: results[0]
+            res.json({ mensaje: 'Usuario agregado correctamente' });
         });
     });
 });
-//actualizar usuario
-router.post('/update/:id',(req,res)=>{
+// mostrar formulario para el usuario existente
+router.get('/edit/:id', (req, res) => {
     const id = req.params.id;
+    const sql = 'SELECT * FROM users WHERE id = ?';
+    db.query(sql, [id], (err, results) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Error al obtener el usuario');
+        } else {
+            res.render('edit', { user: results[0] });
+        }
+    });
+});
+// actualizar usuario
+router.post('/update/:id', (req, res) => {
+    const id = req.params.id; // obtiene el ID del usuario a actualizar desde los parámetros de la URL
+    const { nombre, correo } = req.body; // extrae el nuevo nombre y correo del cuerpo de la solicitud (Formulario)
 
-    const {nombre, correo} = req.body;
-
+    // Cambio: validar que el correo no pertenezca a otro usuario antes de actualizar.
     const validateQuery = 'SELECT id FROM users WHERE correo = ? AND id <> ? LIMIT 1';
-    const updateQuery = 'UPDATE users SET nombre = ?, correo = ? WHERE id = ?'; 
+    const updateQuery = 'UPDATE users SET nombre = ?, correo = ? WHERE id = ?';
 
-    db.query(validateQuery,[correo,id],(err,results)=>{
-        if(err){
+    db.query(validateQuery, [correo, id], (err, results) => {
+        if (err) {
             console.log(err);
             return res.status(500).json({
                 error: 'Error al validar el correo'
             });
-
         }
-        if(results.length > 0 ){
+
+        if (results.length > 0) {
             return res.status(400).json({
-                error: 'El correo ya esta registrado por otro usuario'
+                error: 'El correo ya esta registrado por otro usuario. Capture otro correo.'
             });
         }
-    });
-    db.query(updateQuery,[nombre, correo, id],(error,results)=>{
-        if(error){
-            console.log(error);
 
-            if(err.code === 'ER_DUP_ENTRY'){
-                return res.status(400).json({
-                    error: 'El correo ya esta registrado. Intenta nuevamente'
+        db.query(updateQuery, [nombre, correo, id], (err, result) => {
+            if (err) {
+                console.log(err);
+
+                // Cambio: si la base de datos detecta duplicado, responder con alerta manejable.
+                if (err.code === 'ER_DUP_ENTRY') {
+                    return res.status(400).json({
+                        error: 'El correo ya esta registrado por otro usuario. Capture otro correo.'
+                    });
+                }
+
+                return res.status(500).json({
+                    error: 'Error al actualizar el usuario'
                 });
             }
 
-        }
-        res.json({
-            mensaje: 'Usuario actulizado correctamente'
+            res.json({ mensaje: 'Usuario actualizado correctamente' });
         });
     });
-
 });
-
-router.get('/delete/:id',(req,res)=>{
-    let consulta = 'DELETE FROM users WHERE id = ?';
-    db.query(consulta,
-        [req.params.id],
-        err=>{
-            if(err) return res.send('Error al eliminar');
+// eliminar usuario
+router.get('/delete/:id', (req, res) => {
+    const id = req.params.id;
+    const sql = 'DELETE FROM users WHERE id = ?';
+    db.query(sql, [id], (err, results) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Error al eliminar el usuario');
+        } else {
             res.redirect('/');
-        });
+        }
+    });
 });
+//expotar todas las rutas en el app.js
 module.exports = router;
