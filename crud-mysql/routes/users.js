@@ -4,7 +4,7 @@ const db = require('../db'); // Import the database module to interact with the 
 
 // mostrar todo los usuarios en raiz
 router.get('/', (req, res) => {
-    const sql = 'SELECT * FROM users'; // Define the SQL query to select all users from the database    
+    const sql = 'SELECT * FROM users'; // Define the SQL query to select all users from the database
     db.query(sql, (err, results) => {
         if (err) {
             console.error(err);
@@ -20,6 +20,7 @@ router.post('/add', (req, res) => {
 
     // Cambio: validar el correo antes de insertar para avisar al usuario si ya existe.
     const validateQuery = 'SELECT id FROM users WHERE correo = ? LIMIT 1';
+    // Consulta SQL para insertar un nuevo usuario con parámetros separados de los datos.
     const insertQuery = 'INSERT INTO users (nombre, correo) VALUES (?, ?)';
 
     db.query(validateQuery, [correo], (err, results) => {
@@ -30,6 +31,7 @@ router.post('/add', (req, res) => {
             });
         }
 
+        // Si ya existe un registro con ese correo, evitamos guardarlo de nuevo.
         if (results.length > 0) {
             return res.status(400).json({
                 error: 'El correo ya esta registrado. Capture otro correo.'
@@ -52,6 +54,7 @@ router.post('/add', (req, res) => {
                 });
             }
 
+            // Si todo sale correctamente, responde con mensaje de éxito.
             res.json({ mensaje: 'Usuario agregado correctamente' });
         });
     });
@@ -76,6 +79,7 @@ router.post('/update/:id', (req, res) => {
 
     // Cambio: validar que el correo no pertenezca a otro usuario antes de actualizar.
     const validateQuery = 'SELECT id FROM users WHERE correo = ? AND id <> ? LIMIT 1';
+    // Consulta SQL para actualizar los datos del usuario identificado por su ID.
     const updateQuery = 'UPDATE users SET nombre = ?, correo = ? WHERE id = ?';
 
     db.query(validateQuery, [correo, id], (err, results) => {
@@ -108,6 +112,7 @@ router.post('/update/:id', (req, res) => {
                 });
             }
 
+            // Si todo sale correctamente, responde con mensaje de éxito.
             res.json({ mensaje: 'Usuario actualizado correctamente' });
         });
     });

@@ -23,5 +23,5 @@ connection.connect((err) => {
   console.log('Conexión a la base de datos establecida correctamente');
 });
 
-//exportar la conexión para que pueda ser utilizada en otros archivos
+// Exporta la conexión para usarla en otras partes del proyecto, como las rutas.
 module.exports = connection;

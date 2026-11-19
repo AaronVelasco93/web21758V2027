@@ -1,7 +1,7 @@
 // cargar variables de entorno
 require('dotenv').config();
 
-// importar express
+// Importa Express, el framework para crear servidores web con Node.js.
 const express = require('express');
 
 // importar modulo para el uso de rutas
@@ -22,7 +22,7 @@ app.set('views', path.join(__dirname, 'views'));
 //poner de forma publica la carpeta de public para css, js, imagenes, etc
 app.use(express.static(path.join(__dirname, 'public')));
 
-//middleware para parsear el cuerpo de las solicitudes
+// Middleware que permite leer los datos enviados desde formularios HTML (POST).
 app.use(express.urlencoded({ extended: false }));
 
  // Cambio: permitir solicitudes JSON enviadas por fetch desde los formularios.
@@ -33,7 +33,7 @@ app.use('/', userRoutes);
 //puerto de escucha
 const PORT = process.env.PORT || 3006;
 
-//iniciar el servidor   
+//iniciar el servidor
 app.listen(PORT, () => {
     console.log(`Servidor escuchando en el puerto http://localhost:${PORT}`);
 });
